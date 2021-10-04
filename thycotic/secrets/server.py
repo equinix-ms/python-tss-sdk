@@ -223,6 +223,26 @@ class DomainPasswordGrantAuthorizer(PasswordGrantAuthorizer):
         self.grant_request["domain"] = domain
 
 
+class DomainPasswordOTPGrantAuthorizer(DomainPasswordGrantAuthorizer):
+	def __init__(self, base_url, username, domain, password, otp, token_path_uri=PasswordGrantAuthorizer.TOKEN_PATH_URI):
+		super().__init__(base_url=base_url, username=username, domain=domain, password=password, token_path_uri=token_path_uri)
+		self.otp = otp
+	
+	def get_access_grant(self, token_url, grant_request, otp):
+		response = requests.post(token_url, grant_request, headers={'OTP': otp})
+		try:
+			return json.loads(SecretServer.process(response).content)
+		except json.JSONDecodeError:
+			raise SecretServerError(response)
+	
+	def _refresh(self, seconds_of_drift=300):
+		if hasattr(self, "access_grant") and (self.access_grant_refreshed + timedelta(seconds=self.access_grant["expires_in"] + seconds_of_drift) > datetime.now()):
+			return
+		else:
+			self.access_grant = self.get_access_grant(self.token_url, self.grant_request, self.otp)
+			self.access_grant_refreshed = datetime.now()
+
+
 class SecretServer:
     """A class that uses an *OAuth2 Bearer Token* to access the Secret Server
     REST API. It uses the and `Authorizer` to determine the Authorization

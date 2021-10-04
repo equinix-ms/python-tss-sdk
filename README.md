@@ -60,6 +60,16 @@ from thycotic.secrets.server import DomainPasswordGrantAuthorizer
 authorizer = DomainPasswordGrantAuthorizer("https://hostname/SecretServer", "myusername", "mydomain", "mypassword")
 ```
 
+#### Domain + OTP Authorization
+
+To authenticate using a domain and OTP/MFA ("PIN" in the GUI for some reason), you can use this code:
+
+```python
+from thycotic.secrets.server import DomainPasswordOTPGrantAuthorizer
+
+authorizer = DomainPasswordOTPGrantAuthorizer("https://hostname/SecretServer", "myusername", "mydomain", "mypassword", "123456")
+```
+
 #### Access Token Authorization
 
 If you already have an `access_token`, you can pass directly via the `AccessTokenAuthorizer`.
